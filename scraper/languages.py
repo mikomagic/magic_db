@@ -18,7 +18,6 @@ LANG_DICT = {
     'Spanish'             : 'sp' }
 
 ALL_LANGS = [ v for k, v in LANG_DICT.iteritems() ]
-print ALL_LANGS
 
 class LanguageItemParser(object):
     def __init__(self, filter_languages):
@@ -32,18 +31,18 @@ class LanguageItemParser(object):
         ci.name = self.name_re.search(text).group(1)
         ci.language = LANG_DICT[self.language_re.search(text).group(1)]
         return ci
-        
-    
+
+
 class LanguageListParser(object):
     def __init__(self):
         self.next_page_re = re.compile(r'<a href="[^"]+page=(\d+)[^"]+">&nbsp;&gt;</a>')
         self.num_results_re = re.compile(r'SEARCH:[^\(]*\((\d+)\)')
         self.card_item_re = re.compile(r'<tr class="cardItem .*?>(.*?)</tr>', flags=re.DOTALL)
-        
+
     def parse_next_page(self, text):
         m = self.next_page_re.search(text)
         return int(m.group(1)) if m else None
-    
+
     def parse_num_results(self, text):
         return int(self.num_results_re.search(text).group(1))
 
@@ -71,7 +70,7 @@ class Translations(object):
             card_en = db.find_by_number(number)
             card_en.add_translation(card, db)
             db.add(card)
-        
+
     def associate_and_add_to_db(self, db):
         for k, v in self.cards.iteritems():
             if len(v) == 1:
@@ -79,9 +78,9 @@ class Translations(object):
                 db.add(v[0])
             else:
                 self.__associate_via_card_number(v, db)
-        
-        
-    
+
+
+
 class TranslationFinder(object):
     def __init__(self, multiverseid, filter_languages=ALL_LANGS):
         self.filter_languages = filter_languages
@@ -94,7 +93,7 @@ class TranslationFinder(object):
     def __read_page(self):
         params = { 'multiverseid' : self.multiverseid,
                    'page'         : self.__cur_page }
-        url = 'http://gatherer.wizards.com/Pages/Card/Languages.aspx?' + urllib.urlencode(params)        
+        url = 'http://gatherer.wizards.com/Pages/Card/Languages.aspx?' + urllib.urlencode(params)
         filename = "languages_%d_%d.html" % (self.multiverseid, self.__cur_page)
         return CachedPage(filename, url).read()
 
@@ -106,7 +105,7 @@ class TranslationFinder(object):
         next_page = self.__page_parser.parse_next_page(text)
         assert next_page is None or next_page == self.__cur_page + 1
         self.__cur_page = next_page
-        
+
     def read(self):
         while self.__cur_page is not None:
             text = self.__read_page()
