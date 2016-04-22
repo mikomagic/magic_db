@@ -3,7 +3,8 @@ import urllib
 from logger import Log
 
 class CachedPage(object):
-    CACHE_DIR = "cached_pages"
+    BASE_DIR = os.path.dirname(__file__)
+    CACHE_DIR = os.path.join(BASE_DIR, "cached_pages")
 
     def __init__(self, cache_file_name, url):
         self.cache_path = os.path.join(CachedPage.CACHE_DIR, cache_file_name)
