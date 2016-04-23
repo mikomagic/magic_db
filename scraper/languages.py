@@ -1,9 +1,8 @@
 import re
 import urllib
 from cached_page import CachedPage
-from card_item import Card
-from card_detail import CardDetailReader
-from card_detail import CardDetailParser
+from card import Card
+from card_detail import CardDetail
 
 LANG_DICT = {
     'Chinese Traditional' : 'ct',
@@ -65,8 +64,7 @@ class Translations(object):
 
     def __associate_via_card_number(self, cards, db):
         for card in cards:
-            text = CardDetailReader(card.multiverseid).read()
-            number = CardDetailParser().parse_card_number(text)
+            number = CardDetail(card.multiverseid).get_card_number()
             card_en = db.find_by_number(number)
             card_en.add_translation(card)
             db.add(card)

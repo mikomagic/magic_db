@@ -7,10 +7,9 @@ import urllib
 import argparse
 
 from cached_page import CachedPage
-from card_detail import CardDetailReader
-from card_detail import CardDetailParser
+from card_detail import CardDetail
 import languages
-from card_item import Card
+from card import Card
 from magic_db import MagicDB
 from logger import Log
 
@@ -72,18 +71,12 @@ class CheckList(object):
 
     def __fix_variations(self):
         by_number = self.__build_index_by_number()
-        card_detail_parser = CardDetailParser()
-        clashing_ids = self.__find_clashing_ids()
-        for primary_id in clashing_ids:
-            text = CardDetailReader(primary_id).read()
-            variations = card_detail_parser.parse_variations(text)
-            for id in variations:
-                text = CardDetailReader(id).read()
-                number = card_detail_parser.parse_card_number(text)
-                card = by_number[number]
+        for primary_id in self.__find_clashing_ids():
+            for variation_id in CardDetail(primary_id).get_variations():
+                card = by_number[CardDetail(variation_id).get_card_number()]
                 assert card.multiverseid == primary_id # not yet fixed
-                if card.multiverseid != id:
-                    card.multiverseid = id
+                if card.multiverseid != variation_id:
+                    card.multiverseid = variation_id
                     Log.debug("fixed multiverseid of %s" % card)
 
     def clean_up(self):

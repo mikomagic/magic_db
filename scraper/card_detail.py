@@ -2,28 +2,28 @@ import re
 import urllib
 from cached_page import CachedPage
 
+variation_re = re.compile(r'id="(\d+)" class="variationLink"')
+card_number_re = re.compile(r'Card Number:.*?(\d+)</div>', flags=re.DOTALL)
 
-class CardDetailParser(object):
-    def __init__(self):
-        self.variation_re = re.compile(r'id="(\d+)" class="variationLink"')
-        self.card_number_re = re.compile(r'Card Number:.*?(\d+)</div>', flags=re.DOTALL)
-
-    def parse_variations(self, text):
-        variations = []
-        for m in self.variation_re.finditer(text):
-            variations.append(int(m.group(1)))
-        return variations
-
-    def parse_card_number(self, text):
-        return int(self.card_number_re.search(text).group(1))
-
-
-class CardDetailReader(object):
+class CardDetail(object):
     def __init__(self, multiverseid):
         self.multiverseid = multiverseid
+        self.__text = None
 
-    def read(self):
-        params = { 'multiverseid' : self.multiverseid }
-        url = 'http://gatherer.wizards.com/Pages/Card/Details.aspx?' + urllib.urlencode(params)
-        filename = "detail_%d.html" % (self.multiverseid)
-        return CachedPage(filename, url).read()
+    def __get_text(self):
+        if not self.__text:
+            params = { 'multiverseid' : self.multiverseid }
+            url = 'http://gatherer.wizards.com/Pages/Card/Details.aspx?' + urllib.urlencode(params)
+            filename = "detail_%d.html" % (self.multiverseid)
+            self.__text = CachedPage(filename, url).read()
+        return self.__text
+            
+    def get_variations(self):
+        variations = []
+        for m in variation_re.finditer(self.__get_text()):
+            variations.append(int(m.group(1)))
+        return variations
+        
+    def get_card_number(self):
+        m = card_number_re.search(self.__get_text())
+        return int(m.group(1))
