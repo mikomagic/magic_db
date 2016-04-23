@@ -1,7 +1,7 @@
 import re
 import urllib
 from cached_page import CachedPage
-from card_item import CardItem
+from card_item import Card
 from card_detail import CardDetailReader
 from card_detail import CardDetailParser
 
@@ -26,11 +26,11 @@ class LanguageItemParser(object):
         self.language_re = re.compile(r'<td style="text-align: center;">\s+(.*?)\s+</td>', flags=re.DOTALL)
 
     def parse(self, text):
-        ci = CardItem()
-        ci.multiverseid = int(self.multiverseid_re.search(text).group(1))
-        ci.name = self.name_re.search(text).group(1)
-        ci.language = LANG_DICT[self.language_re.search(text).group(1)]
-        return ci
+        card = Card()
+        card.multiverseid = int(self.multiverseid_re.search(text).group(1))
+        card.name = self.name_re.search(text).group(1)
+        card.language = LANG_DICT[self.language_re.search(text).group(1)]
+        return card
 
 
 class LanguageListParser(object):
@@ -68,13 +68,13 @@ class Translations(object):
             text = CardDetailReader(card.multiverseid).read()
             number = CardDetailParser().parse_card_number(text)
             card_en = db.find_by_number(number)
-            card_en.add_translation(card, db)
+            card_en.add_translation(card)
             db.add(card)
 
     def associate_and_add_to_db(self, db):
         for k, v in self.cards.iteritems():
             if len(v) == 1:
-                db.get(self.multiverseid).add_translation(v[0], db)
+                db.get(self.multiverseid).add_translation(v[0])
                 db.add(v[0])
             else:
                 self.__associate_via_card_number(v, db)

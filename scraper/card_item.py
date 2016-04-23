@@ -1,43 +1,44 @@
 from logger import Log
 
-class CardItem(object):
+class Card(object):
+    '''Technically, a card face, in a particular translations.  Practically,
+    anything with a multiverseid. '''
     def __init__(self):
-        self.multiverseid = None
-        self.number = None
+        self.multiverseid = None # unique identifier
+        self.number = None       # collector's number; same for front and back, and for all translations; unique within set
 
-        self.name = None
+        self.name = None         # same for variations of the same card
         self.artist = None
         self.color = None
-        self.rarity = None
+        self.rarity = None       # in [ 'C', 'U', 'R', 'M', 'L' ]
 
-        self.back_side = None
-        self.front_side = None
+        self.back_face = None    # link to back face, if any
+        self.front_face = None   # link to front face (back faces only)
 
-        self.language = "en"
-        # English cards reference all translations
-        # Non-English cards reference the English card
-        self.translations = {} # lang -> multiverseid
+        self.language = "en"     # two letters, from languages.ALL_LANGS
+        self.translations = {}   # { lang -> card }, English cards reference all translations, non-English cards reference English card only
 
-    def link_back_side(self, other):
-        assert self.front_side is None and self.back_side is None
-        assert other.front_side is None and other.back_side is None
-        self.back_side = other.multiverseid
-        other.front_side = self.multiverseid
-        Log.debug("linked %s as back side of %s" % (other, self))
+    def link_back_face(self, other):
+        assert not self.front_face and not self.back_face
+        assert not other.front_face and not other.back_face
+        self.back_face = other
+        other.front_face = self
+        Log.debug("linked %s as back face of %s" % (other, self))
 
-    def add_translation(self, translated, db):
+    def add_translation(self, translated):
         lang = translated.language
         assert not lang in self.translations
-        self.translations[lang] = translated.multiverseid
-        translated.translations["en"] = self.multiverseid
+        assert not translated.translations
+        self.translations[lang] = translated
+        translated.translations["en"] = self
         for attr in ['number', 'artist', 'color', 'rarity']:
             if not getattr(translated, attr):
                 setattr(translated, attr, getattr(self, attr))
             assert getattr(self, attr) == getattr(translated, attr)
-        if self.front_side:
-            front_en = db.get(self.front_side)
-            front_tr = db.get(front_en.translations[lang])
-            front_tr.link_back_side(translated)
+        if self.front_face and not translated.front_face:
+            front_en = self.front_face
+            front_tr = front_en.translations[lang]
+            front_tr.link_back_face(translated)
         Log.debug("%s is the translation of %s" % (translated, self))
 
     def has_translations(self):
