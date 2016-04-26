@@ -1,6 +1,6 @@
 import os
 import urllib
-from logger import Log
+from common.logger import Log
 
 class CachedPage(object):
     BASE_DIR = os.path.dirname(__file__)

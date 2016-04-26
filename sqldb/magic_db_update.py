@@ -66,7 +66,7 @@ def add_or_update_set(conn, set_id, set_name):
             print "Added set %s with name '%s'" % (set_id, set_name)
     conn.commit()
     return True
-    
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Create, update, or expand Magic DB.')
@@ -76,7 +76,7 @@ def parse_args():
     parser.add_argument('set_id', help='Short ID of Magic set to add or update (e.g., "ORI")')
     parser.add_argument('set_name', nargs='?', help='Full name of Magic set to add or update (e.g., "Magic Origins")')
     return parser.parse_args()
-    
+
 
 def main():
     args = parse_args()

@@ -1,4 +1,4 @@
-from logger import Log
+from common.logger import Log
 
 class Card(object):
     '''Technically, a card face, in a particular translations.  Practically,

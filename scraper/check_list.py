@@ -1,7 +1,7 @@
 import urllib
 import re
 
-from logger import Log
+from common.logger import Log
 from card import Card
 from card_detail import CardDetail
 from cached_page import CachedPage
