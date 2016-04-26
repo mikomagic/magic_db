@@ -11,9 +11,9 @@ from scraper.languages import ALL_LANGS
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Scrape gatherer for one set.')
-    parser.add_argument('-l', '--lang', help='translations to scrape (none|all|de,fr ...)')
+    parser.add_argument('-l', '--lang', default='none', help='translations to scrape (none|all|de,fr ...)')
     parser.add_argument('-d', '--debug', action="store_true", help='print debug logs')
-    parser.add_argument('set_name', help='full name of Magic set to add or update (e.g., "Magic Origins")')
+    parser.add_argument('set_name', help='full name of set to scrape (e.g., "Magic Origins")')
     args = parser.parse_args()
     langs = []
     if args.lang == 'all':
