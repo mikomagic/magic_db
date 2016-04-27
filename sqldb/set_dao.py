@@ -1,11 +1,13 @@
 from common.logger import Log
 
+
 class SetDAO(object):
     @staticmethod
     def create_table(conn):
         conn.execute('''CREATE TABLE Sets (
             id text PRIMARY KEY,
             name text )''')
+        Log.info("Created table Sets")
 
     def __init__(self, set_id, set_name, conn):
         self.id = set_id
@@ -19,7 +21,7 @@ class SetDAO(object):
     def __find_by_id_and_name(self):
         return self.conn.execute('''SELECT * FROM Sets WHERE id = ? AND name = ?''', (self.tuple)).fetchone()
 
-    def insert(self):
+    def __insert(self):
         if not self.name:
             Log.error("Name required when adding set.")
             return False
@@ -28,7 +30,7 @@ class SetDAO(object):
         Log.info("Added %s" % self)
         return True
 
-    def update(self):
+    def __update(self):
         if not self.name:
             return False # nothing to do
         row = self.__find_by_id()
@@ -39,12 +41,12 @@ class SetDAO(object):
             return True
         return False
 
-    def insert_or_update(self):
+    def save(self):
         row = self.__find_by_id()
         if not row:
-            return self.insert()
+            return self.__insert()
         else:
-            return self.update()
+            return self.__update()
 
     def delete(self):
         if self.name:

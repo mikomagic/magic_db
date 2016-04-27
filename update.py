@@ -5,18 +5,14 @@ import sqlite3
 
 from common.logger import Log
 from sqldb.set_dao import SetDAO
+from sqldb.card_dao import CardDAO
 
 
 def create_tables(conn):
     try:
         with conn:
             SetDAO.create_table(conn)
-            conn.execute('''CREATE TABLE Cards (
-                multiverseid int PRIMARY KEY,
-                name text,
-                language text,
-                set_id REFERENCES Sets ( id ),
-                card_number int )''')
+            CardDAO.create_table(conn)
     except sqlite3.OperationalError:
         pass
 
@@ -59,7 +55,7 @@ def main():
         else:
             s.delete()
     else:
-        s.insert_or_update()
+        s.save()
     conn.close()
 
 
