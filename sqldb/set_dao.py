@@ -1,6 +1,6 @@
 from common.logger import Log
 
-class Set(object):
+class SetDAO(object):
     @staticmethod
     def create_table(conn):
         conn.execute('''CREATE TABLE Sets (

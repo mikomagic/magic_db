@@ -4,12 +4,13 @@ import argparse
 import sqlite3
 
 from common.logger import Log
-from sqldb.sets import Set
+from sqldb.set_dao import SetDAO
+
 
 def create_tables(conn):
     try:
         with conn:
-            Set.create_table(conn)
+            SetDAO.create_table(conn)
             conn.execute('''CREATE TABLE Cards (
                 multiverseid int PRIMARY KEY,
                 name text,
@@ -51,7 +52,7 @@ def main():
     Log.log_level = Log.DEBUG if args.debug else Log.INFO
     conn = sqlite3.connect(args.file)
     create_tables(conn)
-    s = Set(args.set_id, args.set_name, conn)
+    s = SetDAO(args.set_id, args.set_name, conn)
     if args.rm:
         if set_has_cards(conn, s.id):
             Log.error("%s is not empty" % self)
