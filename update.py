@@ -6,7 +6,8 @@ import sqlite3
 from common.logger import Log
 from sqldb.set_dao import SetDAO
 from sqldb.card_dao import CardDAO
-
+from scraper.languages import ALL_LANGS
+from scraper.card import Card
 
 def create_tables(conn):
     try:
@@ -56,6 +57,12 @@ def main():
             s.delete()
     else:
         s.save()
+    c = Card()
+    c.multiverseid = 17
+    c.number = 12
+    c.name = "Test Card"
+    cdao = CardDAO(c, "ORI", conn)
+    cdao.save()
     conn.close()
 
 
