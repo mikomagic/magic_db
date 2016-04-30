@@ -8,6 +8,8 @@ from sqldb.set_dao import SetDAO
 from sqldb.card_dao import CardDAO
 from scraper.languages import ALL_LANGS
 from scraper.card import Card
+from scraper.scraper import SetScraper
+
 
 def create_tables(conn):
     try:
@@ -16,11 +18,6 @@ def create_tables(conn):
             CardDAO.create_table(conn)
     except sqlite3.OperationalError:
         pass
-
-
-def set_has_cards(conn, set_id):
-    cur = conn.execute('''SELECT * FROM Cards WHERE set_id = ?''', (set_id,))
-    return cur.fetchone() is not None
 
 
 def parse_args():
@@ -51,20 +48,17 @@ def main():
     create_tables(conn)
     s = SetDAO(args.set_id, args.set_name, conn)
     if args.rm:
-        CardDAO.delete_set(args.set_id, conn)
-        s.delete()
+        with conn:
+            CardDAO.delete_set(args.set_id, conn)
+            s.delete()
     else:
         s.save()
-    c = Card()
-    c.multiverseid = 17
-    c.number = 12
-    c.name = "Test Card"
-    cdao = CardDAO(c, "ORI", conn)
-    cdao.save()
-    c.number = 13
-    c.name = "Test Card Updated"
-    cdao.save()
-    cdao.save()
+        scraper = SetScraper(args.set_name, langs)
+        db = scraper.scrape()
+        with conn:
+            for k, v in db.all_cards.iteritems():
+                cdao = CardDAO(v, args.set_id, conn)
+                cdao.save()
     conn.close()
 
 

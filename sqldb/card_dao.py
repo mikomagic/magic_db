@@ -20,7 +20,6 @@ class CardDAO(DAO):
         stmt = "delete from Cards where set_id = ?"
         cur = conn.execute(stmt, [set_id])
         Log.info("deleted all %d cards of set %s" % (cur.rowcount, set_id))
-        conn.commit()
 
     def __init__(self, card, set_id, conn):
         super(CardDAO, self).__init__(card_td, conn)
@@ -32,7 +31,7 @@ class CardDAO(DAO):
 
     def get_values(self):
         return [self.card.multiverseid,
-                self.card.name,
+                self.card.name.decode('utf-8'),
                 self.card.language,
                 self.set_id,
                 self.card.number]

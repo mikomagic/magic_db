@@ -31,7 +31,6 @@ class TableDesc(object):
             self.name,
             ", ".join([f.sql(self.pkey) for f in self.fields]))
         conn.execute(stmt)
-        conn.commit()
         Log.info("created table %s" % self.name)
 
 
@@ -54,7 +53,6 @@ class DAO(object):
     def insert(self):
         self.conn.execute(self.td.insert_stmt,
                           self.get_values())
-        self.conn.commit()
         Log.info("added %s" % self)
 
     def update(self):
@@ -68,7 +66,6 @@ class DAO(object):
         if different:
             self.conn.execute(self.td.update_stmt,
                               self.values_excl_pkey() + [self.get_pkey()])
-            self.conn.commit()
             Log.info("updated %s" % self)
         else:
             Log.debug("%s unchanged" % self)
@@ -87,5 +84,4 @@ class DAO(object):
         else:
             cur = self.conn.execute(self.td.delete_stmt, [self.get_pkey()])
             assert cur.rowcount == 1
-            self.conn.commit()
             Log.info("deleted %s" % self)
