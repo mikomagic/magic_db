@@ -1,22 +1,38 @@
 from common.logger import Log
 
 
+class FieldDesc(object):
+    def __init__(self, name, field_type):
+        self.name = name
+        self.field_type = field_type
+
+    def sql(self, pkey):
+        return "%s %s%s" % (
+            self.name,
+            self.field_type,
+            self.name == pkey and " primary key" or "")
+
+
 class TableDesc(object):
     def __init__(self, name, pkey, fields):
         self.name = name
         self.pkey = pkey
         self.fields = fields
-        self.pkey_index = fields.index(pkey)
-        self.select_query = "select * from %s where %s = ?" % (
+        self.pkey_index = [f.name for f in fields].index(pkey)
+        self.select_stmt = "select * from %s where %s = ?" % (name, pkey)
+        self.insert_stmt = "insert into %s values (%s)" % (
+            name, ", ".join(["?"] * len(fields)))
+        self.update_stmt = "update %s set %s where %s = ?" % (
+            name, ", ".join([("%s = ?" % f.name) for f in fields if f.name != pkey]), pkey)
+        self.delete_stmt = "delete from %s where %s = ?" % (name, pkey)
+
+    def create_table(self, conn):
+        stmt = "create table %s (%s)" % (
             self.name,
-            self.pkey)
-        self.insert_query = "insert into %s values (%s)" % (
-            self.name,
-            ", ".join(["?"] * len(self.fields)))
-        self.update_query = "update %s set %s where %s = ?" % (
-            self.name,
-            ", ".join([("%s = ?" % f) for f in self.fields if f != self.pkey]),
-            self.pkey)
+            ", ".join([f.sql(self.pkey) for f in self.fields]))
+        conn.execute(stmt)
+        conn.commit()
+        Log.info("created table %s" % self.name)
 
 
 class DAO(object):
@@ -30,22 +46,32 @@ class DAO(object):
         return v
 
     def find_by_pkey(self):
-        cur = self.conn.execute(self.td.select_query,
+        cur = self.conn.execute(self.td.select_stmt,
                                 [self.get_pkey()])
         assert cur.rowcount <= 1
         return cur.fetchone()
 
     def insert(self):
-        self.conn.execute(self.td.insert_query,
+        self.conn.execute(self.td.insert_stmt,
                           self.get_values())
         self.conn.commit()
-        Log.info("Added %s" % self)
+        Log.info("added %s" % self)
 
     def update(self):
-        self.conn.execute(self.td.update_query,
-                          self.values_excl_pkey() + [self.get_pkey()])
-        self.conn.commit()
-        Log.info("Updated %s" % self)
+        row = self.find_by_pkey()
+        v = self.get_values()
+        different = False
+        for i, f in enumerate(self.td.fields):
+            if row[i] != v[i]:
+                Log.debug("field %s changed from %s to %s" % (f.name, row[i], v[i]))
+                different = True
+        if different:
+            self.conn.execute(self.td.update_stmt,
+                              self.values_excl_pkey() + [self.get_pkey()])
+            self.conn.commit()
+            Log.info("updated %s" % self)
+        else:
+            Log.debug("%s unchanged" % self)
 
     def save(self):
         row = self.find_by_pkey()
@@ -54,3 +80,12 @@ class DAO(object):
         else:
             return self.update()
 
+    def delete(self):
+        row = self.find_by_pkey()
+        if not row:
+            Log.error("%s not found" % self)
+        else:
+            cur = self.conn.execute(self.td.delete_stmt, [self.get_pkey()])
+            assert cur.rowcount == 1
+            self.conn.commit()
+            Log.info("deleted %s" % self)

@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('-l', '--lang', default='none', help='translations to udpate (none|all|de,fr ...)')
     parser.add_argument('-d', '--debug', action="store_true", help='print debug logs')
     parser.add_argument('-r', '--rm', action='store_true', help='delete set')
-    parser.add_argument('set_id', help='Short ID of Magic set to add or update (e.g., "ORI")')
+    parser.add_argument('set_id', help='short name of Magic set to add or update (e.g., "ORI")')
     parser.add_argument('set_name', nargs='?', help='full name of set to add or update (e.g., "Magic Origins")')
     args = parser.parse_args()
     langs = []
@@ -51,10 +51,8 @@ def main():
     create_tables(conn)
     s = SetDAO(args.set_id, args.set_name, conn)
     if args.rm:
-        if set_has_cards(conn, s.id):
-            Log.error("%s is not empty" % self)
-        else:
-            s.delete()
+        CardDAO.delete_set(args.set_id, conn)
+        s.delete()
     else:
         s.save()
     c = Card()
@@ -62,6 +60,10 @@ def main():
     c.number = 12
     c.name = "Test Card"
     cdao = CardDAO(c, "ORI", conn)
+    cdao.save()
+    c.number = 13
+    c.name = "Test Card Updated"
+    cdao.save()
     cdao.save()
     conn.close()
 

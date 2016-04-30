@@ -1,71 +1,28 @@
 from common.logger import Log
+from dao import DAO, TableDesc, FieldDesc
 
 
-class SetDAO(object):
+set_td = TableDesc("Sets", "short_name",
+                   [FieldDesc("short_name", "text"),
+                    FieldDesc("full_name", "text")])
+
+
+class SetDAO(DAO):
     @staticmethod
     def create_table(conn):
-        conn.execute('''CREATE TABLE Sets (
-            id text PRIMARY KEY,
-            name text )''')
-        Log.info("Created table Sets")
+        set_td.create_table(conn)
 
-    def __init__(self, set_id, set_name, conn):
-        self.id = set_id
-        self.name = set_name
-        self.tuple = (self.id, self.name)
-        self.conn = conn
+    def __init__(self, short_name, full_name, conn):
+        super(SetDAO, self).__init__(set_td, conn)
+        self.short_name = short_name
+        self.full_name = full_name
 
-    def __find_by_id(self):
-        return self.conn.execute('''SELECT * FROM Sets WHERE id = ?''', (self.id,)).fetchone()
+    def get_pkey(self):
+        return self.short_name
 
-    def __find_by_id_and_name(self):
-        return self.conn.execute('''SELECT * FROM Sets WHERE id = ? AND name = ?''', (self.tuple)).fetchone()
-
-    def __insert(self):
-        if not self.name:
-            Log.error("Name required when adding set.")
-            return False
-        self.conn.execute('''INSERT INTO Sets VALUES (?, ?)''', (self.tuple))
-        self.conn.commit()
-        Log.info("Added %s" % self)
-        return True
-
-    def __update(self):
-        if not self.name:
-            return False # nothing to do
-        row = self.__find_by_id()
-        if row[1] != self.name:
-            self.conn.execute('''UPDATE Sets SET name = ? WHERE id = ?''', (self.name, self.id))
-            self.conn.commit()
-            Log.info("Updated %s" % self)
-            return True
-        return False
-
-    def save(self):
-        row = self.__find_by_id()
-        if not row:
-            return self.__insert()
-        else:
-            return self.__update()
-
-    def delete(self):
-        if self.name:
-            if not self.__find_by_id_and_name():
-                Log.error('%s not found in DB' % self)
-                return False
-        else:
-            if not self.__find_by_id():
-                Log.error('%s not found in DB' % self)
-                return False
-        cur = self.conn.execute('''DELETE FROM Sets WHERE id = ?''', (self.id,))
-        assert cur.rowcount == 1
-        self.conn.commit()
-        Log.info("Deleted %s" % self)
-        return True
+    def get_values(self):
+        return [self.short_name,
+                self.full_name]
 
     def __str__(self):
-        if self.name:
-            return "set %s (%s)" % (self.tuple)
-        else:
-            return "set %s" % (self.id)
-
+        return "set %s (%s)" % (self.short_name, self.full_name)
