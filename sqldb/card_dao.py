@@ -17,12 +17,6 @@ class CardDAO(DAO):
     def create_table(conn):
         card_td.create_table(conn)
 
-    @staticmethod
-    def delete_set(set_id, conn):
-        stmt = "delete from Cards where set_id = ?"
-        cur = conn.execute(stmt, [set_id])
-        log.info("deleted all %d cards of set %s" % (cur.rowcount, set_id))
-
     def __init__(self, card, set_id, conn):
         super(CardDAO, self).__init__(card_td, conn)
         self.card = card

@@ -26,7 +26,6 @@ class TableDesc(object):
             name, ", ".join(["?"] * len(fields)))
         self.update_stmt = "update %s set %s where %s = ?" % (
             name, ", ".join([("%s = ?" % f.name) for f in fields if f.name != pkey]), pkey)
-        self.delete_stmt = "delete from %s where %s = ?" % (name, pkey)
 
     def create_table(self, conn):
         stmt = "create table %s (%s)" % (
@@ -37,6 +36,10 @@ class TableDesc(object):
 
 
 class DAO(object):
+    inserted = 0
+    updated = 0
+    unchanged = 0
+
     def __init__(self, table_desc, conn):
         self.td = table_desc
         self.conn = conn
@@ -56,6 +59,7 @@ class DAO(object):
         self.conn.execute(self.td.insert_stmt,
                           self.get_values())
         log.info("added %s" % self)
+        DAO.inserted += 1
 
     def update(self):
         row = self.find_by_pkey()
@@ -69,8 +73,10 @@ class DAO(object):
             self.conn.execute(self.td.update_stmt,
                               self.values_excl_pkey() + [self.get_pkey()])
             log.info("updated %s" % self)
+            DAO.updated += 1
         else:
             log.debug("%s unchanged" % self)
+            DAO.unchanged += 1
 
     def save(self):
         row = self.find_by_pkey()
@@ -78,12 +84,3 @@ class DAO(object):
             return self.insert()
         else:
             return self.update()
-
-    def delete(self):
-        row = self.find_by_pkey()
-        if not row:
-            log.error("%s not found" % self)
-        else:
-            cur = self.conn.execute(self.td.delete_stmt, [self.get_pkey()])
-            assert cur.rowcount == 1
-            log.info("deleted %s" % self)
