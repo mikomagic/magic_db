@@ -24,14 +24,6 @@ rarity_re = re.compile(r'"rarity">(.)</td>')
 
 
 class CheckListScraper(object):
-    '''Constructs a cleaned up version of a check_list search result for the
-    chosen set.  Two issues are fixed:
-    - check_list shows front and back faces of cards as individual
-      card items; we link them via Card.link_back_face()
-    - check_list shows variations of a card with different collector's
-      numbers, but with the same multiverseid (of a seemingly random
-      instance); we fix the multiverseid of each such card.
-    '''
     def __init__(self, set_code, set_name):
         self.set_code = set_code
         self.set_name = set_name
@@ -86,6 +78,14 @@ class CheckListScraper(object):
 
 
 class CheckList(object):
+    """Constructs a cleaned up version of a check_list search result for the
+    chosen set.  Two issues are fixed:
+    - check_list shows front and back faces of cards as individual
+      card items; we link them via Card.link_back_face()
+    - check_list shows variations of a card with different collector's
+      numbers, but with the same multiverseid (of a seemingly random
+      instance); we fix the multiverseid of each such card.
+    """
     def __init__(self, set_code, set_name):
         self.set_code = set_code
         self.set_name = set_name

@@ -1,5 +1,9 @@
+import logging
 from check_list import CheckList
 from languages import TranslationFinder
+from card_detail import CardDetail
+
+log = logging.getLogger(__name__)
 
 
 class SetScraper(dict):
@@ -12,6 +16,9 @@ class SetScraper(dict):
     def scrape(self):
         self.check_list = CheckList(self.set_code, self.set_name).get()
         for card in self.check_list:
+            card.equivalent_to = CardDetail(card.multiverseid).get_equivalence()
+            if card.equivalent_to:
+                log.debug("%s is equivalent to %d", card, card.equivalent_to)
             self.add(card)
         if self.langs:
             for card in self.check_list:

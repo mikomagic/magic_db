@@ -55,9 +55,9 @@ def main():
                 cdao = CardDAO(v, conn)
                 cdao.save()
     set_count = conn.execute("select count(*) from Cards where set_code = ?", (args.set_code,)).fetchone()[0]
+    new_count = conn.execute("select count(*) from Cards where set_code = ? and equivalent_to is null", (args.set_code,)).fetchone()[0]
+    phy_count = conn.execute("select count(*) from Cards where set_code = ? and equivalent_to is null and back_face_of is null", (args.set_code,)).fetchone()[0]
     all_count = conn.execute("select count(*) from Cards").fetchone()[0]
-    en_count = conn.execute("select count(*) from Cards where translation_of is null").fetchone()[0]
-    phy_count = conn.execute("select count(*) from Cards where translation_of is null and back_face_of is null").fetchone()[0]
     conn.close()
     print "Records:"
     print "  inserted:  %d" % DAO.inserted
@@ -65,9 +65,9 @@ def main():
     print "  unchanged: %d" % DAO.unchanged
     print "Cards:"
     print "  %d printings in set %s" % (set_count, args.set_code)
+    print "  %d new cards in set %s" % (new_count, args.set_code)
+    print "  %d of which physically collectible" % phy_count
     print "  %d printings total" % all_count
-    print "  %d of which English" % en_count
-    print "  %d physically collectible" % phy_count
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ card_td = TableDesc("Cards", "multiverseid",
                      FieldDesc("language", "text"),
                      FieldDesc("translation_of", "int"),
                      FieldDesc("back_face_of", "int"),
-                     FieldDesc("variation_of", "int")])
+                     FieldDesc("equivalent_to", "int")])
 
 
 class CardDAO(DAO):
@@ -36,7 +36,7 @@ class CardDAO(DAO):
                 self.card.language,
                 card_en.multiverseid if card_en else None,
                 self.card.back_face_of.multiverseid if self.card.back_face_of else None,
-                None]
+                self.card.equivalent_to]
 
     def __str__(self):
         return str(self.card)
