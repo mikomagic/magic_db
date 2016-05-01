@@ -59,6 +59,10 @@ def main():
             for k, v in db.all_cards.iteritems():
                 cdao = CardDAO(v, args.set_id, conn)
                 cdao.save()
+    count = conn.execute("select count(*) from Cards where set_id = ?", (args.set_id,)).fetchone()
+    Log.info("%d cards in set" % count)
+    count = conn.execute("select count(*) from Cards").fetchone()
+    Log.info("%d cards in database" % count)
     conn.close()
 
 
