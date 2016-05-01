@@ -28,13 +28,12 @@ class CardDAO(DAO):
         return self.card.multiverseid
 
     def get_values(self):
-        card_en = self.card.translations.get("en")
         return [self.card.multiverseid,
                 self.card.set_code,
                 self.card.number,
                 self.card.name.decode('utf-8'),
                 self.card.language,
-                card_en.multiverseid if card_en else None,
+                self.card.translation_of.multiverseid if self.card.translation_of else None,
                 self.card.back_face_of.multiverseid if self.card.back_face_of else None,
                 self.card.equivalent_to]
 

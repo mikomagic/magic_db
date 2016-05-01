@@ -1,6 +1,6 @@
 import logging
-from check_list import CheckList
-from languages import TranslationFinder
+from checklist import Checklist
+from languages import Translations
 from card_detail import CardDetail
 
 log = logging.getLogger(__name__)
@@ -11,20 +11,19 @@ class SetScraper(dict):
         self.set_code = set_code
         self.set_name = set_name
         self.langs = langs
-        self.check_list = []
+        self.checklist = []
 
     def scrape(self):
-        self.check_list = CheckList(self.set_code, self.set_name).get()
-        for card in self.check_list:
+        self.checklist = Checklist(self.set_code, self.set_name).create()
+        for card in self.checklist:
             card.equivalent_to = CardDetail(card.multiverseid).get_equivalence()
             if card.equivalent_to:
                 log.debug("%s is equivalent to %d", card, card.equivalent_to)
             self.add(card)
         if self.langs:
-            for card in self.check_list:
+            for card in self.checklist:
                 if not card.has_translations():
-                    translations = TranslationFinder(card.multiverseid, self.langs).read()
-                    translations.associate_and_add(self)
+                    Translations(card.multiverseid, self.langs).associate_and_add(self)
         return self
 
     def add(self, card):
@@ -35,6 +34,9 @@ class SetScraper(dict):
         return self[multiverseid]
 
     def find_by_number(self, number):
-        for card in self.check_list:
+        cards = []
+        for card in self.checklist:
             if card.number == number:
-                return card
+                cards.append(card)
+        assert len(cards) == 1
+        return cards[0]

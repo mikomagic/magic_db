@@ -35,7 +35,7 @@ def main():
     print "=" * 80
     print "Final list:"
     print "=" * 80
-    for card in db.check_list:
+    for card in db.checklist:
         print "%-50s%s" % (card, card.translations[langs[0]].name if langs else "")
 
 

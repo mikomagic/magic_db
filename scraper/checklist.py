@@ -5,16 +5,16 @@ import logging
 from card import Card
 from card_detail import CardDetail
 from cached_page import CachedPage
+from multi_page_scraper import MultiPageScraper
 
 log = logging.getLogger(__name__)
 
-
-# whole check_list page
+# on whole checklist page:
 next_page_re = re.compile(r'<a href="[^"]+page=(\d+)[^"]+">&nbsp;&gt;</a>')
 num_results_re = re.compile(r'SEARCH:[^\(]*\((\d+)\)')
 card_item_re = re.compile(r'<tr class="cardItem">(.*?)</tr>')
 
-# individual card_item
+# on individual card items:
 number_re = re.compile(r'"number">(\d+)</td>')
 multiverseid_re = re.compile(r'multiverseid=(\d+)') # part of href
 name_re = re.compile(r'>([^<]+)</a>') # anchor text
@@ -23,8 +23,9 @@ color_re = re.compile(r'"color">([^<]*?)</td>')
 rarity_re = re.compile(r'"rarity">(.)</td>')
 
 
-class CheckListScraper(object):
+class ChecklistScraper(MultiPageScraper):
     def __init__(self, set_code, set_name):
+        super(ChecklistScraper, self).__init__(next_page_re)
         self.set_code = set_code
         self.set_name = set_name
         self.num_results = None
@@ -41,7 +42,7 @@ class CheckListScraper(object):
         card.rarity = rarity_re.search(text).group(1)
         return card
 
-    def __read_page(self, page):
+    def _read_page(self, page):
         params = {'output' : 'checklist',
                   'set'    : '["' + self.set_name + '"]',
                   'page'   : page,
@@ -51,7 +52,7 @@ class CheckListScraper(object):
         filename = ("%s_checklist_page_%s.html" % (set_name, page))
         return CachedPage(filename, url).read()
 
-    def __parse_page(self, text):
+    def _parse_page(self, text):
         if self.num_results is None:
             self.num_results = int(num_results_re.search(text).group(1))
         prev_number = self.cards[-1].number if self.cards else 0
@@ -62,27 +63,17 @@ class CheckListScraper(object):
             self.cards.append(card)
             prev_number = card.number
 
-    def __parse_next_page(self, text, cur_page):
-        m = next_page_re.search(text)
-        next_page = int(m.group(1)) if m else None
-        assert next_page is None or next_page == cur_page + 1
-        return next_page
-
     def scrape(self):
-        page = 0
-        while page is not None:
-            text = self.__read_page(page)
-            self.__parse_page(text)
-            page = self.__parse_next_page(text, page)
+        self._scrape()
         return self.cards
 
 
-class CheckList(object):
-    """Constructs a cleaned up version of a check_list search result for the
+class Checklist(object):
+    """Constructs a cleaned up version of a checklist search result for the
     chosen set.  Two issues are fixed:
-    - check_list shows front and back faces of cards as individual
+    - checklist shows front and back faces of cards as individual
       card items; we link them via Card.link_back_face()
-    - check_list shows variations of a card with different collector's
+    - checklist shows variations of a card with different collector's
       numbers, but with the same multiverseid (of a seemingly random
       instance); we fix the multiverseid of each such card.
     """
@@ -130,9 +121,9 @@ class CheckList(object):
                     card.multiverseid = variation_id
                     log.debug("fixed multiverseid of %s" % card)
 
-    def get(self):
+    def create(self):
         if not self.cards:
-            self.cards = CheckListScraper(self.set_code, self.set_name).scrape()
+            self.cards = ChecklistScraper(self.set_code, self.set_name).scrape()
             self.__link_back_faces()
             self.__fix_variations()
         return self.cards

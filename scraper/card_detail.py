@@ -35,4 +35,8 @@ class CardDetail(object):
 
     def get_equivalence(self):
         m = equivalence_re.search(self.__get_text())
-        return int(m.group(1)) if m else None
+        if m:
+            eq = int(m.group(1))
+            if eq != self.multiverseid:
+                return eq
+        return None

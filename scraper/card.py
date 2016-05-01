@@ -21,33 +21,51 @@ class Card(object):
         self.back_face = None        # (Card) link to back face, if any
         self.back_face_of = None     # (Card) link to front face (back faces only)
         self.language = "en"         # two letters, from languages.ALL_LANGS
-        self.translations = {}       # { 2-letter lang -> Card };
-                                     # English cards reference all translations,
-                                     # non-English cards reference the English card only
+        self.translation_of = None   # (Card) link to English card for non-English cards
+        self.translations = {}       # { 2-letter lang -> Card }; only on English cards
 
-    def link_back_face(self, other):
+    def link_back_face(self, back_face):
+        # assert both unlinked
         assert not self.back_face_of and not self.back_face
-        assert not other.back_face_of and not other.back_face
-        self.back_face = other
-        other.back_face_of = self
-        log.debug("linked %s as back face of %s" % (other, self))
+        assert not back_face.back_face_of and not back_face.back_face
+
+        # link
+        self.back_face = back_face
+        back_face.back_face_of = self
+        log.debug("linked %s as back face of %s" % (back_face, self))
 
     def add_translation(self, translated):
-        lang = translated.language
-        assert not lang in self.translations
+        # assert translated card non-English and unlinked
+        assert translated.language != "en"
+        assert translated.translation_of is None
         assert not translated.translations
-        self.translations[lang] = translated
-        translated.translations["en"] = self
-        translated.equivalent_to = self.equivalent_to or self.multiverseid
+
+        # assert this card English and unlinked
+        assert self.language == "en"
+        assert self.translation_of is None
+        assert not translated.language in self.translations
+
+        # copy other attributes
         for attr in ['set_code', 'number', 'artist', 'color', 'rarity']:
             if not getattr(translated, attr):
                 setattr(translated, attr, getattr(self, attr))
             assert getattr(self, attr) == getattr(translated, attr)
-        if self.back_face_of and not translated.back_face_of:
+
+        # link
+        self.translations[translated.language] = translated
+        translated.translation_of = self
+        log.debug("linked %s as translation of %s" % (translated, self))
+
+        # equivalence of non-English card
+        translated.equivalent_to = self.equivalent_to or self.multiverseid
+
+        # double-sided cards (assume English card correct at this point)
+        if self.back_face_of:
+            assert not translated.back_face_of
             front_en = self.back_face_of
-            front_tr = front_en.translations[lang]
+            # assume front face already linked to translation
+            front_tr = front_en.translations[translated.language]
             front_tr.link_back_face(translated)
-        log.debug("%s is the translation of %s" % (translated, self))
 
     def has_translations(self):
         return self.translations and True

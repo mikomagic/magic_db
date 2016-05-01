@@ -3,6 +3,7 @@ import urllib
 from cached_page import CachedPage
 from card import Card
 from card_detail import CardDetail
+from multi_page_scraper import MultiPageScraper
 
 LANG_DICT = {
     'Chinese Traditional' : 'ct',
@@ -16,52 +17,64 @@ LANG_DICT = {
     'Chinese Simplified'  : 'cs',
     'Spanish'             : 'sp' }
 
-ALL_LANGS = [ v for k, v in LANG_DICT.iteritems() ]
+ALL_LANGS = [ v for k, v in LANG_DICT.iteritems() ] # excluding English
 
-class LanguageItemParser(object):
-    def __init__(self, filter_languages):
-        self.multiverseid_re = re.compile(r'multiverseid=(\d+)')
-        self.name_re = re.compile(r'([^<>]+)</a>')
-        self.language_re = re.compile(r'<td style="text-align: center;">\s+(.*?)\s+</td>', flags=re.DOTALL)
+# whole language list page
+next_page_re = re.compile(r'<a href="[^"]+page=(\d+)[^"]+">&nbsp;&gt;</a>')
+num_results_re = re.compile(r'SEARCH:[^\(]*\((\d+)\)')
+card_item_re = re.compile(r'<tr class="cardItem .*?>(.*?)</tr>', flags=re.DOTALL)
 
-    def parse(self, text):
+# individual card item
+multiverseid_re = re.compile(r'multiverseid=(\d+)')
+name_re = re.compile(r'([^<>]+)</a>')
+language_re = re.compile(r'<td style="text-align: center;">\s+(.*?)\s+</td>', flags=re.DOTALL)
+
+class LanguageListScraper(MultiPageScraper):
+    def __init__(self, multiverseid, filter_languages):
+        super(LanguageListScraper, self).__init__(next_page_re)
+        self.multiverseid = multiverseid
+        self.filter_languages = filter_languages
+
+    def __parse_card_item(self, text):
         card = Card()
-        card.multiverseid = int(self.multiverseid_re.search(text).group(1))
-        card.name = self.name_re.search(text).group(1)
-        card.language = LANG_DICT[self.language_re.search(text).group(1)]
+        card.multiverseid = int(multiverseid_re.search(text).group(1))
+        card.name = name_re.search(text).group(1)
+        card.language = LANG_DICT[language_re.search(text).group(1)]
         # other attributes are set by Card.add_translation()
         return card
 
+    def _read_page(self, page):
+        params = { 'multiverseid' : self.multiverseid,
+                   'page'         : page }
+        url = 'http://gatherer.wizards.com/Pages/Card/Languages.aspx?' + urllib.urlencode(params)
+        filename = "languages_%d_%d.html" % (self.multiverseid, page)
+        return CachedPage(filename, url).read()
 
-class LanguageListParser(object):
-    def __init__(self):
-        self.next_page_re = re.compile(r'<a href="[^"]+page=(\d+)[^"]+">&nbsp;&gt;</a>')
-        self.num_results_re = re.compile(r'SEARCH:[^\(]*\((\d+)\)')
-        self.card_item_re = re.compile(r'<tr class="cardItem .*?>(.*?)</tr>', flags=re.DOTALL)
+    def _parse_page(self, text):
+        for m in card_item_re.finditer(text):
+            card = self.__parse_card_item(m.group(1))
+            if card.language in self.filter_languages:
+                self.translations.add(card)
 
-    def parse_next_page(self, text):
-        m = self.next_page_re.search(text)
-        return int(m.group(1)) if m else None
-
-    def parse_num_results(self, text):
-        return int(self.num_results_re.search(text).group(1))
-
-    def get_card_item_iter(self, text):
-        return self.card_item_re.finditer(text)
+    def scrape(self, translations):
+        self.translations = translations
+        self._scrape()
 
 
 class Translations(object):
-    '''Either a single translation per language, in which case they are
-        translations of the original card.  Or, several translations
-        per language, each for a variation of the original card.
-
-    '''
-    def __init__(self, multiverseid):
+    """Either a single translation per language, in which case they are
+    translations of the original card.  Or several translations per language,
+    each for a variation of the original card.
+    """
+    def __init__(self, multiverseid, filter_languages):
         self.multiverseid = multiverseid
+        self.filter_languages = filter_languages
         self.cards = {}
+        self.__scraped = False
 
-    def add(self, translated_item):
-        self.cards.setdefault(translated_item.language, []).append(translated_item)
+    def add(self, card):
+        assert card.language in self.filter_languages
+        self.cards.setdefault(card.language, []).append(card)
 
     def __associate_via_card_number(self, cards, db):
         for card in cards:
@@ -70,43 +83,17 @@ class Translations(object):
             card_en.add_translation(card)
             db.add(card)
 
+    def __scrape(self):
+        if not self.__scraped:
+            scraper = LanguageListScraper(self.multiverseid, self.filter_languages)
+            scraper.scrape(self)
+            self.__scraped = True
+
     def associate_and_add(self, db):
+        self.__scrape()
         for k, v in self.cards.iteritems():
             if len(v) == 1:
                 db.get(self.multiverseid).add_translation(v[0])
                 db.add(v[0])
             else:
                 self.__associate_via_card_number(v, db)
-
-
-
-class TranslationFinder(object):
-    def __init__(self, multiverseid, filter_languages=ALL_LANGS):
-        self.filter_languages = filter_languages
-        self.multiverseid = multiverseid
-        self.translations = Translations(multiverseid)
-        self.__page_parser = LanguageListParser()
-        self.__item_parser = LanguageItemParser(filter_languages)
-        self.__cur_page = 0
-
-    def __read_page(self):
-        params = { 'multiverseid' : self.multiverseid,
-                   'page'         : self.__cur_page }
-        url = 'http://gatherer.wizards.com/Pages/Card/Languages.aspx?' + urllib.urlencode(params)
-        filename = "languages_%d_%d.html" % (self.multiverseid, self.__cur_page)
-        return CachedPage(filename, url).read()
-
-    def __parse_page(self, text):
-        for m in self.__page_parser.get_card_item_iter(text):
-            card_item = self.__item_parser.parse(m.group(1))
-            if card_item.language in self.filter_languages:
-                self.translations.add(card_item)
-        next_page = self.__page_parser.parse_next_page(text)
-        assert next_page is None or next_page == self.__cur_page + 1
-        self.__cur_page = next_page
-
-    def read(self):
-        while self.__cur_page is not None:
-            text = self.__read_page()
-            self.__parse_page(text)
-        return self.translations
