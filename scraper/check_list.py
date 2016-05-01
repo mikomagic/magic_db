@@ -104,7 +104,7 @@ class CheckList(object):
         by_number = {}
         for card in self.cards:
             if card.number in by_number:
-                assert card.front_face, "number collision of %s and %s" % (card, by_number[card.number])
+                assert card.back_face_of, "number collision of %s and %s" % (card, by_number[card.number])
                 # skip back face
             else:
                 by_number[card.number] = card

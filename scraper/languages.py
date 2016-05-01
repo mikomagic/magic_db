@@ -70,7 +70,7 @@ class Translations(object):
             card_en.add_translation(card)
             db.add(card)
 
-    def associate_and_add_to_db(self, db):
+    def associate_and_add(self, db):
         for k, v in self.cards.iteritems():
             if len(v) == 1:
                 db.get(self.multiverseid).add_translation(v[0])

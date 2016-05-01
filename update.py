@@ -51,19 +51,23 @@ def main():
         sdao = SetDAO(args.set_code, args.set_name, conn)
         sdao.save()
         with conn:
-            for k, v in db.all_cards.iteritems():
+            for k, v in db.iteritems():
                 cdao = CardDAO(v, conn)
                 cdao.save()
     set_count = conn.execute("select count(*) from Cards where set_code = ?", (args.set_code,)).fetchone()[0]
     all_count = conn.execute("select count(*) from Cards").fetchone()[0]
+    en_count = conn.execute("select count(*) from Cards where translation_of is null").fetchone()[0]
+    phy_count = conn.execute("select count(*) from Cards where translation_of is null and back_face_of is null").fetchone()[0]
     conn.close()
     print "Records:"
     print "  inserted:  %d" % DAO.inserted
     print "  updated:   %d" % DAO.updated
     print "  unchanged: %d" % DAO.unchanged
     print "Cards:"
-    print "  %d in set %s" % (set_count, args.set_code)
-    print "  %d total" % all_count
+    print "  %d printings in set %s" % (set_count, args.set_code)
+    print "  %d printings total" % all_count
+    print "  %d of which English" % en_count
+    print "  %d physically collectible" % phy_count
 
 
 if __name__ == "__main__":

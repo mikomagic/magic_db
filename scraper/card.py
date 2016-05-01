@@ -17,16 +17,16 @@ class Card(object):
         self.rarity = None       # in [ 'C', 'U', 'R', 'M', 'L' ]
 
         self.back_face = None    # link to back face, if any
-        self.front_face = None   # link to front face (back faces only)
+        self.back_face_of = None # link to front face (back faces only)
 
         self.language = "en"     # two letters, from languages.ALL_LANGS
         self.translations = {}   # { lang -> card }, English cards reference all translations, non-English cards reference English card only
 
     def link_back_face(self, other):
-        assert not self.front_face and not self.back_face
-        assert not other.front_face and not other.back_face
+        assert not self.back_face_of and not self.back_face
+        assert not other.back_face_of and not other.back_face
         self.back_face = other
-        other.front_face = self
+        other.back_face_of = self
         log.debug("linked %s as back face of %s" % (other, self))
 
     def add_translation(self, translated):
@@ -39,8 +39,8 @@ class Card(object):
             if not getattr(translated, attr):
                 setattr(translated, attr, getattr(self, attr))
             assert getattr(self, attr) == getattr(translated, attr)
-        if self.front_face and not translated.front_face:
-            front_en = self.front_face
+        if self.back_face_of and not translated.back_face_of:
+            front_en = self.back_face_of
             front_tr = front_en.translations[lang]
             front_tr.link_back_face(translated)
         log.debug("%s is the translation of %s" % (translated, self))
