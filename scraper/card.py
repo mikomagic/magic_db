@@ -8,6 +8,7 @@ class Card(object):
     anything with a multiverseid. '''
     def __init__(self):
         self.multiverseid = None # unique identifier
+        self.set_code = None     # three-letter set code
         self.number = None       # collector's number; same for front and back, and for all translations; unique within set
 
         self.name = None         # same for variations of the same card
@@ -34,7 +35,7 @@ class Card(object):
         assert not translated.translations
         self.translations[lang] = translated
         translated.translations["en"] = self
-        for attr in ['number', 'artist', 'color', 'rarity']:
+        for attr in ['set_code', 'number', 'artist', 'color', 'rarity']:
             if not getattr(translated, attr):
                 setattr(translated, attr, getattr(self, attr))
             assert getattr(self, attr) == getattr(translated, attr)

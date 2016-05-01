@@ -8,7 +8,7 @@ card_td = TableDesc("Cards", "multiverseid",
                     [FieldDesc("multiverseid", "int"),
                      FieldDesc("name", "text"),
                      FieldDesc("language", "text"),
-                     FieldDesc("set_id", "text"),
+                     FieldDesc("set_code", "text"),
                      FieldDesc("card_number", "int")])
 
 
@@ -17,10 +17,9 @@ class CardDAO(DAO):
     def create_table(conn):
         card_td.create_table(conn)
 
-    def __init__(self, card, set_id, conn):
+    def __init__(self, card, conn):
         super(CardDAO, self).__init__(card_td, conn)
         self.card = card
-        self.set_id = set_id
 
     def get_pkey(self):
         return self.card.multiverseid
@@ -29,7 +28,7 @@ class CardDAO(DAO):
         return [self.card.multiverseid,
                 self.card.name.decode('utf-8'),
                 self.card.language,
-                self.set_id,
+                self.card.set_code,
                 self.card.number]
 
     def __str__(self):

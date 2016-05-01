@@ -3,12 +3,13 @@ from magic_db import MagicDB
 from languages import TranslationFinder
 
 class SetScraper(object):
-    def __init__(self, set_name, langs):
+    def __init__(self, set_code, set_name, langs):
+        self.set_code = set_code
         self.set_name = set_name
         self.langs = langs
 
     def scrape(self):
-        check_list_cards = CheckList(self.set_name).get()
+        check_list_cards = CheckList(self.set_code, self.set_name).get()
         db = MagicDB()
         db.add_from_check_list(check_list_cards)
         if self.langs:

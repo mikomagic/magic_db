@@ -29,6 +29,7 @@ class LanguageItemParser(object):
         card.multiverseid = int(self.multiverseid_re.search(text).group(1))
         card.name = self.name_re.search(text).group(1)
         card.language = LANG_DICT[self.language_re.search(text).group(1)]
+        # other attributes are set by Card.add_translation()
         return card
 
 

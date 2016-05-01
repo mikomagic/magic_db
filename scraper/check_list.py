@@ -32,15 +32,17 @@ class CheckListScraper(object):
       numbers, but with the same multiverseid (of a seemingly random
       instance); we fix the multiverseid of each such card.
     '''
-    def __init__(self, set_name):
+    def __init__(self, set_code, set_name):
+        self.set_code = set_code
         self.set_name = set_name
         self.num_results = None
         self.cards = []
 
     def __parse_card_item(self, text):
         card = Card()
-        card.number = int(number_re.search(text).group(1))
         card.multiverseid = int(multiverseid_re.search(text).group(1))
+        card.set_code = self.set_code
+        card.number = int(number_re.search(text).group(1))
         card.name = name_re.search(text).group(1)
         card.artist = artist_re.search(text).group(1)
         card.color = color_re.search(text).group(1)
@@ -84,9 +86,10 @@ class CheckListScraper(object):
 
 
 class CheckList(object):
-    def __init__(self, set_name):
-        self.cards = None
+    def __init__(self, set_code, set_name):
+        self.set_code = set_code
         self.set_name = set_name
+        self.cards = None
 
     def __link_back_faces(self):
         prev_card = Card()
@@ -129,7 +132,7 @@ class CheckList(object):
 
     def get(self):
         if not self.cards:
-            self.cards = CheckListScraper(self.set_name).scrape()
+            self.cards = CheckListScraper(self.set_code, self.set_name).scrape()
             self.__link_back_faces()
             self.__fix_variations()
         return self.cards

@@ -12,6 +12,7 @@ from scraper.languages import ALL_LANGS
 def parse_args():
     parser = argparse.ArgumentParser(description='Scrape gatherer for one set.')
     parser.add_argument('-l', '--lang', default='none', help='translations to scrape (none|all|de,fr ...)')
+    parser.add_argument('set_code', help='three-letter code of set to add or update (e.g., "ORI")')
     parser.add_argument('set_name', help='full name of set to scrape (e.g., "Magic Origins")')
     args = parser.parse_args()
     langs = []
@@ -29,7 +30,7 @@ def parse_args():
 def main():
     args, langs = parse_args()
     logging.basicConfig(filename=".scrape.log", filemode="w", level=logging.DEBUG)
-    db = SetScraper(args.set_name, langs).scrape()
+    db = SetScraper(args.set_code, args.set_name, langs).scrape()
 
     print "=" * 80
     print "Final list:"
