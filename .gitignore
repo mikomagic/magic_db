@@ -1,4 +1,5 @@
 /scraper/cached_pages
 /magic.db
+/.*.log
 *~
 *.pyc

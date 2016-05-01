@@ -2,8 +2,8 @@
 
 import argparse
 import sqlite3
+import logging
 
-from common.logger import Log
 from sqldb.set_dao import SetDAO
 from sqldb.card_dao import CardDAO
 from scraper.languages import ALL_LANGS
@@ -24,7 +24,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Create, udpate, or extend SQLite DB.')
     parser.add_argument('-f', '--file', default='magic.db', help='DB file to update')
     parser.add_argument('-l', '--lang', default='none', help='translations to udpate (none|all|de,fr ...)')
-    parser.add_argument('-d', '--debug', action="store_true", help='print debug logs')
     parser.add_argument('-r', '--rm', action='store_true', help='delete set')
     parser.add_argument('set_id', help='short name of Magic set to add or update (e.g., "ORI")')
     parser.add_argument('set_name', nargs='?', help='full name of set to add or update (e.g., "Magic Origins")')
@@ -43,7 +42,7 @@ def parse_args():
 
 def main():
     args, langs = parse_args()
-    Log.log_level = Log.DEBUG if args.debug else Log.INFO
+    logging.basicConfig(filename=".update.log", filemode="w", level=logging.DEBUG)
     conn = sqlite3.connect(args.file)
     create_tables(conn)
     s = SetDAO(args.set_id, args.set_name, conn)
@@ -60,9 +59,9 @@ def main():
                 cdao = CardDAO(v, args.set_id, conn)
                 cdao.save()
     count = conn.execute("select count(*) from Cards where set_id = ?", (args.set_id,)).fetchone()
-    Log.info("%d cards in set" % count)
+    print "%d cards in set" % count
     count = conn.execute("select count(*) from Cards").fetchone()
-    Log.info("%d cards in database" % count)
+    print "%d cards in database" % count
     conn.close()
 
 

@@ -1,4 +1,7 @@
-from common.logger import Log
+import logging
+
+log = logging.getLogger(__name__)
+
 
 class Card(object):
     '''Technically, a card face, in a particular translations.  Practically,
@@ -23,7 +26,7 @@ class Card(object):
         assert not other.front_face and not other.back_face
         self.back_face = other
         other.front_face = self
-        Log.debug("linked %s as back face of %s" % (other, self))
+        log.debug("linked %s as back face of %s" % (other, self))
 
     def add_translation(self, translated):
         lang = translated.language
@@ -39,7 +42,7 @@ class Card(object):
             front_en = self.front_face
             front_tr = front_en.translations[lang]
             front_tr.link_back_face(translated)
-        Log.debug("%s is the translation of %s" % (translated, self))
+        log.debug("%s is the translation of %s" % (translated, self))
 
     def has_translations(self):
         return self.translations and True

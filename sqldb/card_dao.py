@@ -1,5 +1,7 @@
-from common.logger import Log
+import logging
 from dao import DAO, TableDesc, FieldDesc
+
+log = logging.getLogger(__name__)
 
 
 card_td = TableDesc("Cards", "multiverseid",
@@ -19,7 +21,7 @@ class CardDAO(DAO):
     def delete_set(set_id, conn):
         stmt = "delete from Cards where set_id = ?"
         cur = conn.execute(stmt, [set_id])
-        Log.info("deleted all %d cards of set %s" % (cur.rowcount, set_id))
+        log.info("deleted all %d cards of set %s" % (cur.rowcount, set_id))
 
     def __init__(self, card, set_id, conn):
         super(CardDAO, self).__init__(card_td, conn)

@@ -1,6 +1,8 @@
 import os
 import urllib
-from common.logger import Log
+import logging
+log = logging.getLogger(__name__)
+
 
 class CachedPage(object):
     BASE_DIR = os.path.dirname(__file__)
@@ -16,19 +18,19 @@ class CachedPage(object):
 
     def __read_cached(self):
         cached = open(self.cache_path)
-        Log.debug("Reading cached page %s ..." % self.cache_path)
+        log.debug("Reading cached page %s ..." % self.cache_path)
         text = cached.read()
         cached.close()
         return text
 
     def __read_and_cache(self):
         page = urllib.urlopen(self.url)
-        Log.debug("Reading URL %s ..." % self.url)
+        log.debug("Reading URL %s ..." % self.url)
         text = page.read()
         page.close()
         self.__mkdir()
         cached = open(self.cache_path, "w")
-        Log.debug("Writing %d characters to %s ..." % (len(text), self.cache_path))
+        log.debug("Writing %d characters to %s ..." % (len(text), self.cache_path))
         cached.write(text)
         cached.close()
         return text

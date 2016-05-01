@@ -1,4 +1,3 @@
-from common.logger import Log
 from dao import DAO, TableDesc, FieldDesc
 
 

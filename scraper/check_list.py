@@ -1,10 +1,12 @@
 import urllib
 import re
+import logging
 
-from common.logger import Log
 from card import Card
 from card_detail import CardDetail
 from cached_page import CachedPage
+
+log = logging.getLogger(__name__)
 
 
 # whole check_list page
@@ -123,7 +125,7 @@ class CheckList(object):
                 assert card.multiverseid == primary_id # not yet fixed
                 if card.multiverseid != variation_id:
                     card.multiverseid = variation_id
-                    Log.debug("fixed multiverseid of %s" % card)
+                    log.debug("fixed multiverseid of %s" % card)
 
     def get(self):
         if not self.cards:

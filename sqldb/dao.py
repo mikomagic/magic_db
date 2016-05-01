@@ -1,4 +1,6 @@
-from common.logger import Log
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class FieldDesc(object):
@@ -31,7 +33,7 @@ class TableDesc(object):
             self.name,
             ", ".join([f.sql(self.pkey) for f in self.fields]))
         conn.execute(stmt)
-        Log.info("created table %s" % self.name)
+        log.info("created table %s" % self.name)
 
 
 class DAO(object):
@@ -53,7 +55,7 @@ class DAO(object):
     def insert(self):
         self.conn.execute(self.td.insert_stmt,
                           self.get_values())
-        Log.info("added %s" % self)
+        log.info("added %s" % self)
 
     def update(self):
         row = self.find_by_pkey()
@@ -61,14 +63,14 @@ class DAO(object):
         different = False
         for i, f in enumerate(self.td.fields):
             if row[i] != v[i]:
-                Log.debug("field %s changed from %s to %s" % (f.name, row[i], v[i]))
+                log.debug("field %s changed from %s to %s" % (f.name, row[i], v[i]))
                 different = True
         if different:
             self.conn.execute(self.td.update_stmt,
                               self.values_excl_pkey() + [self.get_pkey()])
-            Log.info("updated %s" % self)
+            log.info("updated %s" % self)
         else:
-            Log.debug("%s unchanged" % self)
+            log.debug("%s unchanged" % self)
 
     def save(self):
         row = self.find_by_pkey()
@@ -80,8 +82,8 @@ class DAO(object):
     def delete(self):
         row = self.find_by_pkey()
         if not row:
-            Log.error("%s not found" % self)
+            log.error("%s not found" % self)
         else:
             cur = self.conn.execute(self.td.delete_stmt, [self.get_pkey()])
             assert cur.rowcount == 1
-            Log.info("deleted %s" % self)
+            log.info("deleted %s" % self)

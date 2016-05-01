@@ -3,8 +3,8 @@
 import sys
 import os
 import argparse
+import logging
 
-from common.logger import Log
 from scraper.scraper import SetScraper
 from scraper.languages import ALL_LANGS
 
@@ -12,7 +12,6 @@ from scraper.languages import ALL_LANGS
 def parse_args():
     parser = argparse.ArgumentParser(description='Scrape gatherer for one set.')
     parser.add_argument('-l', '--lang', default='none', help='translations to scrape (none|all|de,fr ...)')
-    parser.add_argument('-d', '--debug', action="store_true", help='print debug logs')
     parser.add_argument('set_name', help='full name of set to scrape (e.g., "Magic Origins")')
     args = parser.parse_args()
     langs = []
@@ -29,7 +28,7 @@ def parse_args():
 
 def main():
     args, langs = parse_args()
-    Log.log_level = Log.DEBUG if args.debug else Log.INFO
+    logging.basicConfig(filename=".scrape.log", filemode="w", level=logging.DEBUG)
     db = SetScraper(args.set_name, langs).scrape()
 
     print "=" * 80
