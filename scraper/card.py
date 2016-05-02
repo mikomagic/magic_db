@@ -71,7 +71,7 @@ class Card(object):
         return self.translations and True
 
     def __str__(self):
-        return "%3d, %s, %s" % (self.number,
+        return "%3d, %s, %s" % (self.number if self.number is not None else -1,
                                 self.multiverseid,
                                 self.name)
 

@@ -114,7 +114,7 @@ class Checklist(object):
                 if match != -1:
                     assert candidates[match] == card # fully equivalent
                 match = i
-        return candidates.pop(i)
+        return candidates.pop(match)
 
     def __fix_variations(self):
         clashing_cards = self.__find_clashing_cards()
@@ -122,6 +122,7 @@ class Checklist(object):
             for variation_id in CardDetail(clashing_id).get_variations():
                 card_number = CardDetail(variation_id).get_card_number()
                 card = self.__pick_matching_card(clashing_set, card_number)
+                assert card.number == card_number
                 assert card.multiverseid == clashing_id # not yet fixed
                 if card.multiverseid != variation_id:
                     card.multiverseid = variation_id

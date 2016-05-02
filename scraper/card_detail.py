@@ -24,11 +24,11 @@ class CardDetail(object):
         return self.__text
 
     def get_variations(self):
-        variations = set()
+        variations = []
         for m in variation_re.finditer(self.__get_text()):
             v = int(m.group(1))
             assert not v in variations
-            variations.add(v)
+            variations.append(v)
         log.debug("variations of %d: %s" % (self.multiverseid, variations))
         return variations
 

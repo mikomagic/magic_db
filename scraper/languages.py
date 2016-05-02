@@ -69,17 +69,31 @@ class Translations(object):
     def __init__(self, multiverseid, filter_languages):
         self.multiverseid = multiverseid
         self.filter_languages = filter_languages
-        self.cards = {}
+        self.cards = {} # language -> [ Card ]
         self.__scraped = False
 
     def add(self, card):
         assert card.language in self.filter_languages
         self.cards.setdefault(card.language, []).append(card)
 
-    def __associate_via_card_number(self, cards, db):
-        for card in cards:
-            number = CardDetail(card.multiverseid).get_card_number()
-            card_en = db.find_by_number(number)
+    def __associate_vector(self, cards, db):
+        # It appears that the multiverseids of the foreign language variations
+        # are at a fixed offset to the multiverseids of the corresponding English
+        # variations.  Card number can help us verify this, though they are not
+        # always unique (BFZ lands for example).
+        variations_en = sorted(CardDetail(self.multiverseid).get_variations())
+        cards_en = [db.get(v) for v in variations_en]
+        cards.sort(key=lambda card: card.multiverseid)
+        assert len(cards_en) == len(cards)
+        offset = cards[0].multiverseid - cards_en[0].multiverseid
+        prev_id = -1
+        for card, card_en in zip(cards, cards_en):
+            assert card.multiverseid > prev_id
+            prev_id = card.multiverseid
+            assert card.multiverseid - card_en.multiverseid == offset
+            card.number = CardDetail(card.multiverseid).get_card_number()
+            assert card_en.number == card.number
+            # looks good
             card_en.add_translation(card)
             db.add(card)
 
@@ -96,4 +110,4 @@ class Translations(object):
                 db.get(self.multiverseid).add_translation(v[0])
                 db.add(v[0])
             else:
-                self.__associate_via_card_number(v, db)
+                self.__associate_vector(v, db)
