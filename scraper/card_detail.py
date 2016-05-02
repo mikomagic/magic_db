@@ -24,9 +24,12 @@ class CardDetail(object):
         return self.__text
 
     def get_variations(self):
-        variations = []
+        variations = set()
         for m in variation_re.finditer(self.__get_text()):
-            variations.append(int(m.group(1)))
+            v = int(m.group(1))
+            assert not v in variations
+            variations.add(v)
+        log.debug("variations of %d: %s" % (self.multiverseid, variations))
         return variations
 
     def get_card_number(self):
@@ -45,6 +48,5 @@ class CardDetail(object):
         comps = {}
         for m in card_component_re.finditer(self.__get_text()):
             comps[int(m.group(1))] = int(m.group(2))
-        if comps:
-            log.debug("found card components %s" % comps)
+        log.debug("card components for %d: %s" % (self.multiverseid, comps))
         return comps

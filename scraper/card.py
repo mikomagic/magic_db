@@ -22,7 +22,7 @@ class Card(object):
         self.back_face_of = None     # (Card) link to front face (back faces only)
         self.language = "en"         # two letters, from languages.ALL_LANGS
         self.translation_of = None   # (Card) link to English card for non-English cards
-        self.translations = {}       # { 2-letter lang -> Card }; only on English cards
+        self.translations = {}       # 2-letter lang -> Card; only on English cards
 
     def link_back_face(self, back_face):
         # assert both unlinked
@@ -74,3 +74,9 @@ class Card(object):
         return "%3d, %s, %s" % (self.number,
                                 self.multiverseid,
                                 self.name)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)

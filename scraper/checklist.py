@@ -95,35 +95,38 @@ class Checklist(object):
                         log.warn("unclear relationship between %s and %s" % (prev_card, card))
             prev_card = card
 
-    def __build_index_by_number(self):
-        by_number = {}
+    def __find_clashing_cards(self):
+        all_cards = {} # multiverseid -> Card
+        clashing_cards = {} # multiverseid -> [ Card ]
         for card in self.cards:
-            if card.number in by_number:
-                assert card.back_face_of, "number collision of %s and %s" % (card, by_number[card.number])
-                # skip back face
+            if card.multiverseid in clashing_cards:
+                clashing_cards[card.multiverseid].append(card)
+            elif card.multiverseid in all_cards:
+                clashing_cards[card.multiverseid] = [all_cards[card.multiverseid], card]
             else:
-                by_number[card.number] = card
-        return by_number
+                all_cards[card.multiverseid] = card
+        return clashing_cards
 
-    def __find_clashing_ids(self):
-        all_ids = set()
-        clashing_ids = set()
-        for card in self.cards:
-            if card.multiverseid in all_ids:
-                clashing_ids.add(card.multiverseid)
-            else:
-                all_ids.add(card.multiverseid)
-        return clashing_ids
+    def __pick_matching_card(self, candidates, card_number):
+        match = -1
+        for i, card in enumerate(candidates):
+            if card.number == card_number:
+                if match != -1:
+                    assert candidates[match] == card # fully equivalent
+                match = i
+        return candidates.pop(i)
 
     def __fix_variations(self):
-        by_number = self.__build_index_by_number()
-        for primary_id in self.__find_clashing_ids():
-            for variation_id in CardDetail(primary_id).get_variations():
-                card = by_number[CardDetail(variation_id).get_card_number()]
-                assert card.multiverseid == primary_id # not yet fixed
+        clashing_cards = self.__find_clashing_cards()
+        for clashing_id, clashing_set in clashing_cards.iteritems():
+            for variation_id in CardDetail(clashing_id).get_variations():
+                card_number = CardDetail(variation_id).get_card_number()
+                card = self.__pick_matching_card(clashing_set, card_number)
+                assert card.multiverseid == clashing_id # not yet fixed
                 if card.multiverseid != variation_id:
                     card.multiverseid = variation_id
                     log.debug("fixed multiverseid of %s" % card)
+            assert not clashing_set # all found
 
     def create(self):
         if not self.cards:
