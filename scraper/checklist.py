@@ -86,10 +86,14 @@ class Checklist(object):
         prev_card = Card()
         for card in self.cards:
             if card.number == prev_card.number:
-                if not prev_card.back_face:
-                    prev_card.link_back_face(card)
-            else:
-                prev_card = card
+                if card.multiverseid != prev_card.multiverseid:
+                    comps = CardDetail(prev_card.multiverseid).get_card_components()
+                    if comps.get(0, None) == prev_card.multiverseid and \
+                       comps.get(1, None) == card.multiverseid:
+                        prev_card.link_back_face(card)
+                    else:
+                        log.warn("unclear relationship between %s and %s" % (prev_card, card))
+            prev_card = card
 
     def __build_index_by_number(self):
         by_number = {}

@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 variation_re = re.compile(r'id="(\d+)" class="variationLink"')
 card_number_re = re.compile(r'Card Number:.*?(\d+)</div>', flags=re.DOTALL)
 equivalence_re = re.compile(r'otherSetsValue">\s*<a href="Details.aspx\?multiverseid=(\d+)">', flags=re.DOTALL)
-
+card_component_re = re.compile(r'cardComponent(\d)" class=.*?multiverseid=(\d+)', flags=re.DOTALL)
 
 class CardDetail(object):
     def __init__(self, multiverseid):
@@ -40,3 +40,11 @@ class CardDetail(object):
             if eq != self.multiverseid:
                 return eq
         return None
+
+    def get_card_components(self):
+        comps = {}
+        for m in card_component_re.finditer(self.__get_text()):
+            comps[int(m.group(1))] = int(m.group(2))
+        if comps:
+            log.debug("found card components %s" % comps)
+        return comps
