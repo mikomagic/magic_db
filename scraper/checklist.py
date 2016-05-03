@@ -84,6 +84,7 @@ class Checklist(object):
 
     def __link_back_faces(self):
         prev_card = Card()
+        prev_card.number = 0
         for i, card in enumerate(self.cards):
             if card.number == prev_card.number:
                 if card.multiverseid != prev_card.multiverseid:
@@ -95,6 +96,8 @@ class Checklist(object):
                     self.cards[i-1] = prev_card = faces[comps[0]]
                     self.cards[i] = card = faces[comps[1]]
                     prev_card.link_back_face(card)
+            else:
+                assert prev_card.number + 1 == card.number
             prev_card = card
 
     def __find_clashing_cards(self):
