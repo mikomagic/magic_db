@@ -84,15 +84,17 @@ class Checklist(object):
 
     def __link_back_faces(self):
         prev_card = Card()
-        for card in self.cards:
+        for i, card in enumerate(self.cards):
             if card.number == prev_card.number:
                 if card.multiverseid != prev_card.multiverseid:
+                    # assume double-sided card
                     comps = CardDetail(prev_card.multiverseid).get_card_components()
-                    if comps.get(0, None) == prev_card.multiverseid and \
-                       comps.get(1, None) == card.multiverseid:
-                        prev_card.link_back_face(card)
-                    else:
-                        log.warn("unclear relationship between %s and %s" % (prev_card, card))
+                    assert len(comps) == 2 and comps[0] != comps[1]
+                    faces = { card.multiverseid : card, prev_card.multiverseid : prev_card }
+                    # ordering may be reversed; fix
+                    self.cards[i-1] = prev_card = faces[comps[0]]
+                    self.cards[i] = card = faces[comps[1]]
+                    prev_card.link_back_face(card)
             prev_card = card
 
     def __find_clashing_cards(self):
