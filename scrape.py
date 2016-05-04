@@ -29,7 +29,7 @@ def parse_args():
 
 def main():
     args, langs = parse_args()
-    logging.basicConfig(filename=".scrape.log", filemode="w", level=logging.DEBUG)
+    logging.basicConfig(filename=".scrape.%s.log" % args.set_code, filemode="w", level=logging.DEBUG)
     db = SetScraper(args.set_code, args.set_name, langs).scrape()
 
     print "=" * 80

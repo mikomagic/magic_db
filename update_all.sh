@@ -1,4 +1,8 @@
 #!/usr/bin/bash
+./update.py -lde M14 "Magic 2014 Core Set"
+./update.py -lde THS "Theros"
+./update.py -lde BNG "Born of the Gods"
+./update.py -lde JOU "Journey into Nyx"
 ./update.py -lde M15 "Magic 2015 Core Set"
 ./update.py -lde KTK "Khans of Tarkir"
 ./update.py -lde FRF "Fate Reforged"

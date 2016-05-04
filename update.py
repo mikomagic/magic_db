@@ -42,7 +42,7 @@ def parse_args():
 
 def main():
     args, langs = parse_args()
-    logging.basicConfig(filename=".update.log", filemode="w", level=logging.DEBUG)
+    logging.basicConfig(filename=".update.%s.log" % args.set_code, filemode="w", level=logging.DEBUG)
     scraper = SetScraper(args.set_code, args.set_name, langs)
     db = scraper.scrape()
     conn = sqlite3.connect(args.file)
